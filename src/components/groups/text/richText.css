@@ -1,0 +1,79 @@
+/* Styles du contenu TipTap (groupe « Texte »). Couleurs = variables du thème HeroUI,
+   donc compatibles mode sombre. */
+
+.yuri-rich-text .tiptap {
+  min-height: 100%;
+  outline: none;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.yuri-rich-text .tiptap > * + * {
+  margin-top: 0.35em;
+}
+
+.yuri-rich-text .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.yuri-rich-text .tiptap h1 { font-size: 1.35em; font-weight: 800; letter-spacing: -0.02em; margin-top: 0.6em; }
+.yuri-rich-text .tiptap h2 { font-size: 1.18em; font-weight: 700; letter-spacing: -0.01em; margin-top: 0.6em; }
+.yuri-rich-text .tiptap h3 { font-size: 1.05em; font-weight: 700; margin-top: 0.6em; }
+
+.yuri-rich-text .tiptap ul { list-style: disc; padding-left: 1.25rem; }
+.yuri-rich-text .tiptap ol { list-style: decimal; padding-left: 1.25rem; }
+.yuri-rich-text .tiptap li > p { margin: 0; }
+
+/* Listes de cases à cocher */
+.yuri-rich-text .tiptap ul[data-type="taskList"] { list-style: none; padding-left: 0.15rem; }
+.yuri-rich-text .tiptap ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.5rem; }
+.yuri-rich-text .tiptap ul[data-type="taskList"] li > label { margin-top: 0.2em; user-select: none; }
+.yuri-rich-text .tiptap ul[data-type="taskList"] li > label input { accent-color: var(--accent); cursor: pointer; }
+.yuri-rich-text .tiptap ul[data-type="taskList"] li > div { flex: 1; min-width: 0; }
+.yuri-rich-text .tiptap ul[data-type="taskList"] li[data-checked="true"] > div {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.yuri-rich-text .tiptap hr {
+  border: 0;
+  border-top: 1px solid var(--separator);
+  margin: 0.75rem 0;
+}
+
+.yuri-rich-text .tiptap hr.ProseMirror-selectednode {
+  border-top-color: var(--accent);
+}
+
+.yuri-rich-text .tiptap a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: text;
+}
+
+.yuri-rich-text .tiptap blockquote {
+  border-left: 2px solid color-mix(in oklab, var(--accent) 45%, transparent);
+  padding-left: 0.75rem;
+  color: var(--muted);
+}
+
+.yuri-rich-text .tiptap code {
+  border-radius: 0.375rem;
+  background: var(--default);
+  padding: 0.1em 0.3em;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.9em;
+}
+
+/* Surligneurs pastel : texte sombre pour rester lisible en mode sombre. */
+.yuri-rich-text .tiptap mark {
+  border-radius: 0.2em;
+  padding: 0 0.1em;
+  color: #0f172a;
+}

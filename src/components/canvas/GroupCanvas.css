@@ -1,0 +1,45 @@
+/* Canevas : aperçu de déplacement et poignée de redimensionnement au style « aéré ». */
+.group-canvas {
+  min-height: 100%;
+}
+
+.group-canvas .react-grid-item.react-grid-placeholder {
+  background: var(--accent);
+  opacity: 0.12;
+  border-radius: 18px;
+}
+
+.group-canvas .react-grid-item.react-draggable-dragging > section,
+.group-canvas .react-grid-item.resizing > section {
+  box-shadow: 0 2px 4px rgba(16, 24, 40, 0.06), 0 16px 40px rgba(16, 24, 40, 0.16);
+}
+
+.group-canvas .react-grid-item > .react-resizable-handle {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.group-canvas .react-grid-item:hover > .react-resizable-handle {
+  opacity: 0.6;
+}
+
+.group-canvas .react-grid-item > .react-resizable-handle::after {
+  right: 8px;
+  bottom: 8px;
+  border-color: var(--muted);
+}
+
+/* Filtre Ctrl+F : les composants hors résultat s'effacent, les résultats sont cerclés. */
+.group-canvas .react-grid-item {
+  transition: opacity 0.15s, filter 0.15s;
+}
+
+.group-canvas .react-grid-item.search-miss {
+  opacity: 0.25;
+  filter: grayscale(0.8);
+}
+
+.group-canvas .react-grid-item.search-hit > section {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

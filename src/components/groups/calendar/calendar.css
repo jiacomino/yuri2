@@ -1,0 +1,280 @@
+/* FullCalendar habillé « moderne coloré » : variables FullCalendar branchées sur les jetons
+   HeroUI, pour suivre automatiquement le mode clair / sombre. */
+.cal-airy {
+  --fc-border-color: var(--separator);
+  --fc-page-bg-color: var(--surface);
+  --fc-neutral-bg-color: var(--surface-secondary);
+  --fc-list-event-hover-bg-color: var(--surface-secondary);
+  --fc-today-bg-color: color-mix(in oklab, var(--accent) 5%, transparent);
+  --fc-now-indicator-color: var(--accent);
+  --fc-highlight-color: color-mix(in oklab, var(--accent) 12%, transparent);
+  --fc-event-selected-overlay-color: color-mix(in oklab, var(--accent) 16%, transparent);
+  --fc-more-link-bg-color: transparent;
+  --fc-more-link-text-color: var(--muted);
+  font-size: 0.8889rem;
+  color: var(--foreground);
+}
+
+/* La grille : bordure fine aux lignes claires, coins arrondis. */
+.cal-airy .fc {
+  height: 100%;
+}
+
+.cal-airy .fc .fc-scrollgrid {
+  overflow: hidden;
+  border: 1px solid var(--separator);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.cal-airy .fc .fc-scrollgrid td:last-of-type,
+.cal-airy .fc .fc-scrollgrid th:last-of-type {
+  border-right: none;
+}
+
+.cal-airy .fc .fc-scrollgrid-section:last-of-type > td {
+  border-bottom: none;
+}
+
+.cal-airy .fc-theme-standard td,
+.cal-airy .fc-theme-standard th {
+  border-color: var(--fc-border-color);
+}
+
+/* En-têtes de colonnes : discrets, sans soulignement. */
+.cal-airy .fc .fc-col-header-cell {
+  border-left: none;
+  border-right: none;
+  background: var(--surface);
+}
+
+.cal-airy .fc .fc-col-header-cell-cushion,
+.cal-airy .fc .fc-daygrid-day-number,
+.cal-airy .fc .fc-timegrid-axis-cushion,
+.cal-airy .fc .fc-timegrid-slot-label-cushion {
+  padding: 4px 6px;
+  color: var(--muted);
+  font-size: 0.8148rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+
+.cal-airy .fc .fc-col-header-cell-cushion {
+  padding-block: 8px;
+  text-transform: capitalize;
+}
+
+/* Aujourd'hui : colonne légèrement teintée, en-tête et numéro à l'accent. */
+.cal-airy .fc .fc-col-header-cell.fc-day-today {
+  background: var(--fc-today-bg-color);
+}
+
+.cal-airy .fc .fc-day-today .fc-col-header-cell-cushion,
+.cal-airy .fc .fc-day-today .fc-daygrid-day-number {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.cal-airy .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  margin: 3px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.cal-airy .fc .fc-day-other .fc-daygrid-day-number {
+  opacity: 0.5;
+}
+
+/* Lignes horaires : demi-heures à peine marquées. */
+.cal-airy .fc .fc-timegrid-slot {
+  height: 1.6rem;
+}
+
+.cal-airy .fc .fc-timegrid-slot-minor {
+  border-top-style: dashed;
+  border-top-color: color-mix(in oklab, var(--separator) 60%, transparent);
+}
+
+.cal-airy .fc .fc-timegrid-slot-label {
+  vertical-align: top;
+}
+
+.cal-airy .fc .fc-timegrid-axis,
+.cal-airy .fc .fc-timegrid-slot-label {
+  border-right: none;
+}
+
+.cal-airy .fc .fc-timegrid-divider {
+  padding: 0;
+  border-bottom-width: 1px;
+  background: var(--fc-border-color);
+}
+
+/* Tâches : blocs doux arrondis, teintés par leur application. */
+.cal-airy .fc .fc-event {
+  border-width: 0;
+  border-style: solid;
+  border-radius: 7px;
+  padding: 2px 4px 2px 6px;
+  font-size: 0.8148rem;
+  cursor: pointer;
+  box-shadow: none;
+  transition: filter 0.15s ease;
+}
+
+.cal-airy .fc .fc-event:hover {
+  filter: brightness(0.97);
+}
+
+.dark .cal-airy .fc .fc-event:hover {
+  filter: brightness(1.15);
+}
+
+.cal-airy .fc .fc-timegrid-event-harness-inset .fc-timegrid-event {
+  box-shadow: 0 0 0 1px var(--surface);
+}
+
+.cal-airy .fc .fc-event-main {
+  overflow: hidden;
+}
+
+.cal-airy .fc .fc-daygrid-event-dot {
+  display: none;
+}
+
+.cal-airy .fc .fc-daygrid-event {
+  margin-top: 2px;
+}
+
+.cal-airy .cal-event-content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+  line-height: 1.3;
+}
+
+.cal-airy .cal-event-title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+/* L'urgence se lit au contour coloré de la tâche. */
+.cal-airy .fc .fc-event.cal-prio-urgent {
+  border-width: 1.5px;
+}
+
+.cal-airy .fc .fc-event.cal-prio-high {
+  border-width: 1px;
+}
+
+.cal-airy .fc .fc-event.cal-event-selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.cal-airy .fc .fc-highlight {
+  border-radius: 7px;
+}
+
+/* Indicateur « maintenant » : ligne et pointe à l'accent. */
+.cal-airy .fc .fc-timegrid-now-indicator-line {
+  border-width: 2px 0 0;
+}
+
+.cal-airy .fc .fc-timegrid-now-indicator-arrow {
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.cal-airy .fc .fc-daygrid-more-link {
+  font-size: 0.8148rem;
+  font-weight: 600;
+}
+
+.cal-airy .fc .fc-popover {
+  overflow: hidden;
+  border: none;
+  border-radius: 12px;
+  background: var(--overlay, var(--surface));
+  box-shadow: 0 8px 30px rgba(16, 24, 40, 0.14);
+}
+
+.cal-airy .fc .fc-popover-header {
+  background: var(--surface-secondary);
+  color: var(--muted);
+  font-size: 0.8148rem;
+  font-weight: 700;
+}
+
+/* Barres de défilement fines. */
+.cal-airy .fc .fc-scroller::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.cal-airy .fc .fc-scroller::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--muted) 30%, transparent);
+}
+
+.cal-airy .fc .fc-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Sélecteur de vue segmenté : piste grise, segment actif blanc. */
+.cal-view-switch.toggle-button-group {
+  gap: 2px;
+  padding: 2px;
+  border-radius: 10px;
+  background: var(--default);
+}
+
+.cal-view-switch.toggle-button-group .toggle-button {
+  --toggle-button-bg: transparent;
+  --toggle-button-bg-hover: color-mix(in oklab, var(--surface) 55%, transparent);
+  --toggle-button-bg-pressed: color-mix(in oklab, var(--surface) 55%, transparent);
+  --toggle-button-fg: var(--muted);
+  --toggle-button-bg-selected: var(--surface);
+  --toggle-button-bg-selected-hover: var(--surface);
+  --toggle-button-bg-selected-pressed: var(--surface);
+  --toggle-button-fg-selected: var(--foreground);
+  height: 26px;
+  padding-inline: 10px;
+  border-radius: 8px;
+  font-size: 0.8889rem;
+  font-weight: 600;
+}
+
+.cal-view-switch.toggle-button-group .toggle-button[data-selected="true"] {
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+}
+
+/* Sélecteur de couleur natif présenté en pastille ronde. */
+.cal-color-input {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: 0;
+  background: transparent;
+}
+
+.cal-color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.cal-color-input::-webkit-color-swatch {
+  border: 2px solid var(--surface);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.cal-view-switch.toggle-button-group .toggle-button-group__separator {
+  display: none;
+}

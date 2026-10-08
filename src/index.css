@@ -1,0 +1,139 @@
+/* HeroUI v3 : importe Tailwind 4, tw-animate-css, le thème par défaut et les styles
+   des composants. Mode sombre : classe `.dark` sur <html> (posée dans main.tsx). */
+@import "@fontsource-variable/inter";
+@import "@heroui/styles";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Thème « moderne coloré » : fond gris-bleu, cartes blanches, accent indigo. */
+:root {
+  /* Graisses allégées (police variable) : semi-gras et gras restent fins, jamais pâteux. */
+  --font-weight-medium: 470;
+  --font-weight-semibold: 530;
+  --font-weight-bold: 600;
+  --font-weight-extrabold: 680;
+  --accent: #4f46e5;
+  --radius: 0.625rem;
+}
+
+:root:not(.dark) {
+  --background: #eef1f7;
+  --surface-secondary: #f5f7fb;
+  --surface-tertiary: #eef1f7;
+  --default: #f1f3f8;
+  --muted: #6b7280;
+  --border: #e3e7ef;
+  --separator: #eef0f4;
+}
+
+.dark {
+  /* Texte clair sur fond sombre : il paraît plus épais, on allège encore un peu. */
+  --font-weight-medium: 440;
+  --font-weight-semibold: 500;
+  --font-weight-bold: 570;
+  --font-weight-extrabold: 650;
+  --accent: #818cf8;
+  --accent-foreground: #0b0c10;
+  --background: #0d0e13;
+  --surface: #16181f;
+  --surface-secondary: #1c1f27;
+  --surface-tertiary: #22252e;
+  --default: #23262f;
+  --overlay: #1a1c23;
+  --border: #2a2e39;
+  --separator: #23262f;
+}
+
+/* Cases à cocher : contour visible (par défaut, blanches sur fond blanc). */
+.checkbox__control {
+  border-width: 1.5px;
+  border-color: color-mix(in oklab, var(--foreground) 22%, transparent);
+  background-color: var(--surface);
+}
+.checkbox[data-selected="true"] .checkbox__control {
+  border-color: var(--accent);
+}
+
+/* Fond du canevas : teinté par la couleur de l'espace actif (--ws-tint), trame de points discrète. */
+.canvas-bg {
+  background-color: color-mix(in oklab, var(--ws-tint, var(--accent)) 8%, var(--background));
+  background-image: radial-gradient(color-mix(in oklab, var(--foreground) 9%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Carte : voile très léger de la couleur du composant (--group-tint). */
+.group-frame {
+  background-color: color-mix(in oklab, var(--group-tint) 4%, var(--surface));
+}
+
+/* Barre de titre des composants : pastel léger de la couleur du composant (plus clair que le
+   liseré de survol). Le contenu est séparé par une marge (le corps commence sous la barre). */
+.group-header {
+  background-color: color-mix(in oklab, var(--group-tint, var(--accent)) 13%, var(--surface));
+  margin-bottom: 0.75rem;
+}
+
+/* Survol des listes, teinté de la couleur du composant. `data-active="true"` garde la ligne
+   en évidence pendant qu'un menu est ouvert.
+   Liseré pastel : couleur du composant adoucie vers le fond (reste doux en mode sombre).
+   - .list-row : ligne plate (liens, identifiants, tâches) → fond teinté + liseré.
+   - .list-card : petite carte (kanban, workflow, Eisenhower) → liseré + ombre portée. */
+.list-row,
+.list-card {
+  --row-pastel: color-mix(in oklab, var(--group-tint, var(--accent)) 45%, var(--surface));
+  transition:
+    background-color 0.15s,
+    box-shadow 0.15s;
+}
+.list-row:hover,
+.list-row[data-active="true"] {
+  background-color: color-mix(in oklab, var(--group-tint, var(--accent)) 8%, var(--surface));
+  box-shadow: inset 0 0 0 1px var(--row-pastel);
+}
+/* Séparateur très léger entre deux lignes consécutives, retiré autour de la ligne survolée
+   pour ne pas couper son liseré. */
+.list-row + .list-row {
+  position: relative;
+}
+.list-row + .list-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10px;
+  right: 10px;
+  height: 1px;
+  background-color: color-mix(in oklab, var(--foreground) 6%, transparent);
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+.list-row:is(:hover, [data-active="true"])::before,
+.list-row:is(:hover, [data-active="true"]) + .list-row::before {
+  opacity: 0;
+}
+
+.list-card:hover,
+.list-card[data-active="true"] {
+  background-color: color-mix(in oklab, var(--group-tint, var(--accent)) 4%, var(--surface));
+  box-shadow:
+    inset 0 0 0 1px var(--row-pastel),
+    0 4px 14px -2px rgba(16, 24, 40, 0.12);
+}
+
+@layer base {
+  /* Taille de base du texte. HeroUI, Tailwind et les tailles des composants sont en rem :
+     tout le texte (et les espacements) suit cette seule valeur. */
+  html {
+    font-family: "Inter Variable", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+    /* « a » à un seul étage, chiffres ouverts : rendu plus doux à petite taille. */
+    font-feature-settings: "cv11", "ss01";
+    font-size: 10.5px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+  }
+}
