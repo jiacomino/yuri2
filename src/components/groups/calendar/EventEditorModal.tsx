@@ -1,5 +1,6 @@
 import { Button, Input, Label, Modal, Switch, TextArea } from "@heroui/react";
 import { Trash2 } from "lucide-react";
+import { AlarmPicker } from "./AlarmPicker";
 import { AppPicker } from "./AppPicker";
 import { ColorDots } from "./ColorDots";
 import { allDayBounds } from "./dates";
@@ -87,6 +88,13 @@ export function EventEditorModal({ task, apps, onPatch, onCreateApp, onDelete, o
                       end={task.end}
                       allDay={task.allDay}
                       onChange={(patch) => onPatch(task.id, patch)}
+                    />
+                  </Section>
+
+                  <Section label="Alerte avant le début">
+                    <AlarmPicker
+                      task={task}
+                      onChange={(alarmMinutesBefore) => onPatch(task.id, { alarmMinutesBefore })}
                     />
                   </Section>
 

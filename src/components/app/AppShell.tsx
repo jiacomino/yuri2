@@ -22,6 +22,8 @@ import { AppHeader } from "./AppHeader";
 import { CanvasSearch } from "./CanvasSearch";
 import { TagSidebar } from "./TagSidebar";
 import { useClipboardRecorder } from "@/components/groups/clipboard/useClipboardRecorder";
+import { useCalendarAlarms } from "@/components/groups/calendar/useCalendarAlarms";
+import { AlertOverlay } from "./AlertOverlay";
 
 const SIDEBAR_KEY = "yuri2.tagSidebarOpen";
 
@@ -46,6 +48,7 @@ export function AppShell() {
   const ws = useWorkspaces();
   const grp = useGroups();
   useClipboardRecorder(grp.groups, grp.updateState);
+  useCalendarAlarms(grp.groups, grp.updateState);
 
   const [workspaceDialog, setWorkspaceDialog] = useState<WorkspaceDialogTarget | null>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -295,6 +298,7 @@ export function AppShell() {
         onClose={() => setEditingGroupId(null)}
         onSave={handleSaveSettings}
       />
+      <AlertOverlay />
     </div>
   );
 }

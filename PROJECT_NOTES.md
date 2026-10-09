@@ -258,6 +258,15 @@ viennent de HeroUI (`import { Button, Card, … } from "@heroui/react"`), avec u
   ÷ `devicePixelRatio` puis `elementFromPoint` pour viser le bon composant, même superposé).
   Doublons de chemin ignorés. NB : le dépôt HTML5 du composant Image (`dataTransfer.files`)
   est probablement inopérant tant que le glisser-déposer natif de Tauri est actif.
+- 2026-10-09: **Alertes du calendrier, affichées au premier plan.** Section « Alerte avant le
+  début » dans l'éditeur de tâche (aucune, à l'heure, 5/15/30 min, 1 h, 2 h, 1 jour). Stockée
+  en délai relatif (`alarmMinutesBefore`) + `alarmFiredAt` (instant déjà déclenché) : déplacer
+  la tâche réarme l'alerte. Une tâche terminée ne sonne plus. Surveillance au niveau de l'app
+  (`useCalendarAlarms` dans `AppShell`, 15 s) pour tous les calendriers, même réduits ou dans un
+  autre espace. À l'échéance : modale `AlertOverlay` (store `lib/alertOverlay.ts`, à acquitter,
+  « Rappeler dans 5 min » non conservé au redémarrage), fenêtre dé-réduite, mise au premier plan
+  et `alwaysOnTop` tant qu'une alerte est ouverte, toast Windows avec son. Permissions
+  `core:window:allow-{show,unminimize,set-focus,set-always-on-top,request-user-attention}`.
 
 ## Open Questions
 - Quel visuel pour chaque type de composant (le cadre commun est fixé) ?

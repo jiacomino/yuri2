@@ -25,6 +25,13 @@ export type CalendarTask = {
   /** Id d'une entrée de `apps`, absent si non affectée. */
   appId?: string;
   notes: string;
+  /** Alerte N minutes avant le début (0 = à l'heure) ; absente si aucune alerte. */
+  alarmMinutesBefore?: number;
+  /**
+   * Instant ISO de la dernière alerte déclenchée. Déplacer la tâche change l'instant
+   * calculé : l'alerte se réarme d'elle-même.
+   */
+  alarmFiredAt?: string;
 };
 
 /**
