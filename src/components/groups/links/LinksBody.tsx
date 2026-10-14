@@ -4,7 +4,8 @@ import { notify } from "@/lib/notify";
 import type { BodyProps } from "../types";
 import type { LinkItem, LinksState, LinkTab } from "./state";
 import { EditableTabs } from "@/components/shared/EditableTabs";
-import { LinkDialog, type LinkDialogTarget } from "./LinkDialog";
+import { LinkDialog, type LinkDialogTarget, type LinkDraft } from "./LinkDialog";
+import { copyWithNotice } from "../password/clipboard";
 import { LinkList } from "./LinkList";
 import { useStoredTab } from "./useStoredTab";
 import { confirmDelete } from "@/lib/confirm";
@@ -70,13 +71,15 @@ export function LinksBody({ groupId, value, onChange }: BodyProps<LinksState>) {
     });
   }
 
-  function submitDialog(name: string, url: string) {
+  function submitDialog(draft: LinkDraft) {
     if (!dialog) return;
     if (dialog.mode === "add") {
-      updateItems(dialog.tabId, (items) => [...items, { id: genId(), kind: "link", name, url }]);
+      updateItems(dialog.tabId, (items) => [...items, { id: genId(), kind: "link", ...draft }]);
     } else {
       const { itemId } = dialog;
-      updateItems(dialog.tabId, (items) => items.map((i) => (i.id === itemId ? { ...i, name, url } : i)));
+      // `draft` porte toujours les clés username/password (éventuellement `undefined`) :
+      // vider un champ efface bien l'ancienne valeur.
+      updateItems(dialog.tabId, (items) => items.map((i) => (i.id === itemId ? { ...i, ...draft } : i)));
     }
   }
 
@@ -98,8 +101,20 @@ export function LinksBody({ groupId, value, onChange }: BodyProps<LinksState>) {
           onReorder={(items) => updateItems(activeTab.id, () => items)}
           onOpen={(item) => void openItem(item)}
           onCopyUrl={(item) => void copyUrl(item)}
+          onCopyUsername={(item) => void copyWithNotice("Nom d'utilisateur", item.username ?? "")}
+          onCopyPassword={(item) => void copyWithNotice("Mot de passe", item.password ?? "")}
           onDuplicate={(item) => duplicateItem(activeTab.id, item)}
-          onEdit={(item) => setDialog({ mode: "edit", tabId: activeTab.id, itemId: item.id, name: item.name, url: item.url })}
+          onEdit={(item) =>
+            setDialog({
+              mode: "edit",
+              tabId: activeTab.id,
+              itemId: item.id,
+              name: item.name,
+              url: item.url,
+              username: item.username,
+              password: item.password,
+            })
+          }
           onRemove={(item) => void removeItem(activeTab.id, item)}
           onRenameSeparator={(item, name) =>
             updateItems(activeTab.id, (items) => items.map((i) => (i.id === item.id ? { ...i, name } : i)))

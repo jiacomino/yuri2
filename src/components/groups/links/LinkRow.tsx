@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { KeyRound } from "lucide-react";
 import { hostnameOf } from "@/lib/url";
 import { useContextMenuAnchor } from "@/components/shared/useContextMenuAnchor";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,8 @@ import { LinkMenu } from "./LinkMenu";
 export type LinkRowActions = {
   onOpen: () => void;
   onCopyUrl: () => void;
+  onCopyUsername: () => void;
+  onCopyPassword: () => void;
   onDuplicate: () => void;
   onEdit: () => void;
   onRemove: () => void;
@@ -50,10 +53,15 @@ export function LinkRow({ item, onOpen, ...actions }: { item: LinkItem } & LinkR
       >
         <Favicon url={item.url} />
         <span className="min-w-0 flex-1 truncate font-semibold">{item.name}</span>
+        {(item.username || item.password) && (
+          <KeyRound className="size-3 shrink-0 text-muted" aria-label="Identifiants enregistrés" />
+        )}
         <span className="hidden max-w-[45%] shrink-0 truncate text-[0.8889rem] text-muted @[18rem]:inline">{hostnameOf(item.url)}</span>
       </div>
       <LinkMenu
         name={item.name}
+        hasUsername={!!item.username}
+        hasPassword={!!item.password}
         isOpen={menuOpen}
         onOpenChange={(open) => {
           setMenuOpen(open);

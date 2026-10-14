@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 import { Button, Dropdown, Label, Separator } from "@heroui/react";
-import { Copy, Ellipsis, Files, Pencil, Trash2 } from "lucide-react";
+import { Copy, Ellipsis, Files, KeyRound, Pencil, Trash2, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type LinkMenuProps = {
@@ -9,7 +9,12 @@ type LinkMenuProps = {
   onOpenChange: (open: boolean) => void;
   /** Repère sous le curseur quand le menu est ouvert par clic droit. */
   anchorRef?: RefObject<Element | null>;
+  /** Les entrées de copie sont grisées tant que le lien n'a pas d'identifiant / mot de passe. */
+  hasUsername: boolean;
+  hasPassword: boolean;
   onCopyUrl: () => void;
+  onCopyUsername: () => void;
+  onCopyPassword: () => void;
   onDuplicate: () => void;
   onEdit: () => void;
   onRemove: () => void;
@@ -21,7 +26,11 @@ export function LinkMenu({
   isOpen,
   onOpenChange,
   anchorRef,
+  hasUsername,
+  hasPassword,
   onCopyUrl,
+  onCopyUsername,
+  onCopyPassword,
   onDuplicate,
   onEdit,
   onRemove,
@@ -44,14 +53,25 @@ export function LinkMenu({
         <Dropdown.Menu
           onAction={(key) => {
             if (key === "copy") onCopyUrl();
+            else if (key === "copy-username") onCopyUsername();
+            else if (key === "copy-password") onCopyPassword();
             else if (key === "duplicate") onDuplicate();
             else if (key === "edit") onEdit();
             else if (key === "delete") onRemove();
           }}
+          disabledKeys={[...(hasUsername ? [] : ["copy-username"]), ...(hasPassword ? [] : ["copy-password"])]}
         >
           <Dropdown.Item id="copy" textValue="Copier l'URL">
             <Copy className="size-3.5" />
             <Label>Copier l'URL</Label>
+          </Dropdown.Item>
+          <Dropdown.Item id="copy-username" textValue="Copier le nom d'utilisateur">
+            <User className="size-3.5" />
+            <Label>Copier le nom d'utilisateur</Label>
+          </Dropdown.Item>
+          <Dropdown.Item id="copy-password" textValue="Copier le mot de passe">
+            <KeyRound className="size-3.5" />
+            <Label>Copier le mot de passe</Label>
           </Dropdown.Item>
           <Dropdown.Item id="duplicate" textValue="Dupliquer le lien">
             <Files className="size-3.5" />

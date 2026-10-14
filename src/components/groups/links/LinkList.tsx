@@ -22,6 +22,8 @@ type LinkListProps = {
   onReorder: (items: LinkItem[]) => void;
   onOpen: (item: LinkItem) => void;
   onCopyUrl: (item: LinkItem) => void;
+  onCopyUsername: (item: LinkItem) => void;
+  onCopyPassword: (item: LinkItem) => void;
   onDuplicate: (item: LinkItem) => void;
   onEdit: (item: LinkItem) => void;
   onRemove: (item: LinkItem) => void;
@@ -36,6 +38,8 @@ export function LinkList({
   onReorder,
   onOpen,
   onCopyUrl,
+  onCopyUsername,
+  onCopyPassword,
   onDuplicate,
   onEdit,
   onRemove,
@@ -94,6 +98,8 @@ export function LinkList({
                       item={item}
                       onOpen={() => onOpen(item)}
                       onCopyUrl={() => onCopyUrl(item)}
+                      onCopyUsername={() => onCopyUsername(item)}
+                      onCopyPassword={() => onCopyPassword(item)}
                       onDuplicate={() => onDuplicate(item)}
                       onEdit={() => onEdit(item)}
                       onRemove={() => onRemove(item)}

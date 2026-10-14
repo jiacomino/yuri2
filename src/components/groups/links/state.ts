@@ -8,6 +8,10 @@ export type LinkItem = {
   name: string;
   /** Vide pour un séparateur. */
   url: string;
+  /** Identifiant associé au lien (optionnel). */
+  username?: string;
+  /** Mot de passe associé au lien (optionnel, stocké en clair comme le groupe « Mots de passe »). */
+  password?: string;
 };
 
 export type LinkTab = {
