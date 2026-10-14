@@ -3,7 +3,7 @@ import ReactGridLayout, { getCompactor, useContainerWidth, type Layout } from "r
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { GRID_COLS, GRID_MARGIN, GRID_ROW_HEIGHT } from "@/lib/grid";
-import type { GroupRecord, LayoutPatch } from "@/types/workspace";
+import type { GroupRecord, LayoutPatch, Workspace } from "@/types/workspace";
 import { cn } from "@/lib/utils";
 import { CanvasGroup } from "./CanvasGroup";
 import "./GroupCanvas.css";
@@ -13,11 +13,14 @@ const compactor = getCompactor(null, true, false);
 
 type GroupCanvasProps = {
   groups: GroupRecord[];
+  /** Tous les espaces, pour le bouton « Déplacer vers… » des composants. */
+  workspaces: Workspace[];
   onLayoutChange: (patches: LayoutPatch[]) => void;
   onStateChange: (id: string, state: unknown) => void;
   onMinimize: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (group: GroupRecord) => void;
+  onMove: (group: GroupRecord, workspaceId: string) => void;
   onTagClick: (tag: string) => void;
   /** Résultat du filtre (Ctrl+F) : ids correspondants, ou null sans filtre actif. */
   matchIds?: Set<string> | null;
@@ -26,11 +29,13 @@ type GroupCanvasProps = {
 /** Canevas d'un espace : composants déplaçables (barre de titre) et redimensionnables. */
 export function GroupCanvas({
   groups,
+  workspaces,
   onLayoutChange,
   onStateChange,
   onMinimize,
   onEdit,
   onDelete,
+  onMove,
   onTagClick,
   matchIds,
 }: GroupCanvasProps) {
@@ -66,10 +71,12 @@ export function GroupCanvas({
             >
               <CanvasGroup
                 group={group}
+                workspaces={workspaces}
                 onStateChange={onStateChange}
                 onMinimize={onMinimize}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onMove={onMove}
                 onTagClick={onTagClick}
               />
             </div>

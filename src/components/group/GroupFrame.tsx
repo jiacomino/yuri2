@@ -1,7 +1,8 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Button, Chip, Dropdown, Label } from "@heroui/react";
-import { Ellipsis, Minus, Settings2, Trash2 } from "lucide-react";
+import { Ellipsis, FolderInput, Minus, Settings2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { Workspace } from "@/types/workspace";
 
 type GroupFrameProps = {
   title: string;
@@ -16,6 +17,9 @@ type GroupFrameProps = {
   /** Ouvre la fenêtre de réglages (nom, couleur, tags, espace). */
   onEdit?: () => void;
   onDelete?: () => void;
+  /** Espaces vers lesquels le composant peut être déplacé (bouton masqué si vide). */
+  moveTargets?: Workspace[];
+  onMoveTo?: (workspaceId: string) => void;
   /** Clic sur un tag : filtre l'espace sur ce tag. */
   onTagClick?: (tag: string) => void;
 };
@@ -36,6 +40,8 @@ export function GroupFrame({
   onMinimize,
   onEdit,
   onDelete,
+  moveTargets = [],
+  onMoveTo,
   onTagClick,
 }: GroupFrameProps) {
   return (
@@ -90,12 +96,37 @@ export function GroupFrame({
               <Minus className="size-3.5" />
             </Button>
           )}
+          {onMoveTo && moveTargets.length > 0 && <MoveMenu targets={moveTargets} onMoveTo={onMoveTo} />}
           {(onEdit || onDelete) && <GroupMenu onEdit={onEdit} onDelete={onDelete} />}
         </div>
       </header>
 
       <div className="min-h-0 flex-1 overflow-auto px-4 pb-4">{children}</div>
     </section>
+  );
+}
+
+/** Bouton « Déplacer vers… » : liste des autres espaces de travail. */
+function MoveMenu({ targets, onMoveTo }: { targets: Workspace[]; onMoveTo: (workspaceId: string) => void }) {
+  return (
+    <Dropdown>
+      <Button isIconOnly size="sm" variant="ghost" aria-label="Déplacer vers un autre espace">
+        <FolderInput className="size-3.5" />
+      </Button>
+      <Dropdown.Popover placement="bottom end">
+        <Dropdown.Menu aria-label="Déplacer vers" onAction={(key) => onMoveTo(String(key))}>
+          {targets.map((ws) => (
+            <Dropdown.Item key={ws.id} id={ws.id} textValue={ws.name}>
+              <span
+                className="size-2.5 shrink-0 rounded-full"
+                style={{ background: ws.color ?? "var(--muted)" }}
+              />
+              <Label>{ws.name}</Label>
+            </Dropdown.Item>
+          ))}
+        </Dropdown.Menu>
+      </Dropdown.Popover>
+    </Dropdown>
   );
 }
 

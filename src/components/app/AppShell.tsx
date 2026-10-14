@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Spinner } from "@heroui/react";
 import { AddGroupDialog } from "@/components/add/AddGroupDialog";
 import { EmptyWorkspace } from "@/components/canvas/EmptyWorkspace";
@@ -119,6 +119,43 @@ export function AppShell() {
       if (await confirmDelete(`Supprimer le composant « ${group.name} » et tout son contenu ?`)) remove(group.id);
     },
     [remove],
+  );
+
+  // Lu par handleMove sans en faire une dépendance (garde CanvasGroup mémoïsé à chaque frappe).
+  const groupsRef = useRef(grp.groups);
+  groupsRef.current = grp.groups;
+  const workspacesRef = useRef(ws.workspaces);
+  workspacesRef.current = ws.workspaces;
+  const { setActiveId } = ws;
+
+  /** Déplace un composant vers un autre espace, posé sous les composants déjà présents. */
+  const handleMove = useCallback(
+    (group: GroupRecord, workspaceId: string) => {
+      const target = workspacesRef.current.find((w) => w.id === workspaceId);
+      if (!target || group.workspaceId === workspaceId) return;
+      const bottom = groupsRef.current
+        .filter((g) => g.workspaceId === workspaceId && !g.minimized)
+        .reduce((max, g) => Math.max(max, g.y + g.h), 0);
+      update(group.id, { workspaceId, x: 0, y: bottom });
+      notify({
+        title: "Composant déplacé",
+        body: `« ${group.name} » → ${target.name}`,
+        kind: "success",
+        durationMs: 8000,
+        action: {
+          label: "Afficher",
+          onPress: () => {
+            setActiveId(workspaceId);
+            window.setTimeout(() => {
+              document
+                .querySelector(`[data-group-id="${group.id}"]`)
+                ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }, 100);
+          },
+        },
+      });
+    },
+    [update, setActiveId],
   );
 
   async function handleDeleteWorkspace(workspace: Workspace) {
@@ -257,11 +294,13 @@ export function AppShell() {
           {visible.length > 0 ? (
             <GroupCanvas
               groups={visible}
+              workspaces={ws.workspaces}
               onLayoutChange={grp.applyLayout}
               onStateChange={handleStateChange}
               onMinimize={handleMinimize}
               onEdit={setEditingGroupId}
               onDelete={handleDelete}
+              onMove={handleMove}
               onTagClick={handleTagClick}
               matchIds={matchIds}
             />
