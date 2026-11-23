@@ -21,7 +21,8 @@ export type GroupKind =
   | "timetrack"
   | "goals"
   | "clipboard"
-  | "launcher";
+  | "launcher"
+  | "deploy";
 
 /**
  * Contrat commun à tous les corps de groupe : un état typé, contrôlé par le parent.

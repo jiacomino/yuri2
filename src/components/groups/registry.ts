@@ -19,6 +19,7 @@ import { timetrackGroup } from "./timetrack";
 import { goalsGroup } from "./goals";
 import { clipboardGroup } from "./clipboard";
 import { launcherGroup } from "./launcher";
+import { deployGroup } from "./deploy";
 
 /** Tous les types de groupe, dans l'ordre du menu « Ajouter ». */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,6 +44,7 @@ export const groupDefinitions: GroupDefinition<any>[] = [
   goalsGroup,
   clipboardGroup,
   launcherGroup,
+  deployGroup,
 ];
 
 export function findDefinition(kind: GroupKind): GroupDefinition<unknown> | undefined {
@@ -71,4 +73,5 @@ export const groupDescriptions: Record<GroupKind, string> = {
   goals: "Objectifs par étapes ou chiffrés, avec avancement et échéance.",
   clipboard: "Historique des textes et images copiés, à recopier en un clic.",
   launcher: "Applications Windows à lancer d'un clic, choisies parmi celles installées.",
+  deploy: "Déroulé d'une mise en production par étapes, avec une note sur chaque étape.",
 };
