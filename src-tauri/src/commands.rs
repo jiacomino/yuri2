@@ -1,16 +1,46 @@
 //! Commandes Tauri de persistance (espaces de travail et composants).
 
+use crate::crypto::Cipher;
 use crate::db::{self, Group, LayoutPatch, Workspace};
 use rusqlite::Connection;
 use std::sync::Mutex;
 
-pub struct DbState(pub Mutex<Connection>);
+/// Base + clé de chiffrement des secrets (`crypto`). Les secrets sont chiffrés à
+/// l'écriture et déchiffrés à la lecture : le frontend ne manipule que du clair.
+pub struct DbState {
+    pub conn: Mutex<Connection>,
+    pub cipher: Cipher,
+}
+
+impl DbState {
+    fn seal_group(&self, g: &Group) -> Group {
+        Group { content: self.cipher.seal(&g.content), ..g.clone() }
+    }
+
+    fn decrypted_groups(&self, c: &Connection) -> rusqlite::Result<Vec<Group>> {
+        Ok(db::list_groups(c)?
+            .into_iter()
+            .map(|g| Group { content: self.cipher.open(&g.content), ..g })
+            .collect())
+    }
+}
+
+/// Chiffre les secrets encore en clair (bases antérieures au chiffrement).
+pub fn migrate_secrets(conn: &Connection, cipher: &Cipher) -> rusqlite::Result<()> {
+    for g in db::list_groups(conn)? {
+        let sealed = cipher.seal(&g.content);
+        if sealed != g.content {
+            db::upsert_group(conn, &Group { content: sealed, ..g })?;
+        }
+    }
+    Ok(())
+}
 
 fn with_db<T>(
     state: &tauri::State<DbState>,
     f: impl FnOnce(&mut Connection) -> rusqlite::Result<T>,
 ) -> Result<T, String> {
-    let mut conn = state.0.lock().map_err(|e| e.to_string())?;
+    let mut conn = state.conn.lock().map_err(|e| e.to_string())?;
     f(&mut conn).map_err(|e| e.to_string())
 }
 
@@ -50,11 +80,12 @@ pub fn delete_workspace(state: tauri::State<DbState>, id: String) -> Result<(), 
 
 #[tauri::command]
 pub fn list_groups(state: tauri::State<DbState>) -> Result<Vec<Group>, String> {
-    with_db(&state, |c| db::list_groups(c))
+    with_db(&state, |c| state.decrypted_groups(c))
 }
 
 #[tauri::command]
 pub fn upsert_group(state: tauri::State<DbState>, group: Group) -> Result<(), String> {
+    let group = state.seal_group(&group);
     with_db(&state, |c| db::upsert_group(c, &group))
 }
 
@@ -73,7 +104,8 @@ pub fn save_layouts(state: tauri::State<DbState>, patches: Vec<LayoutPatch>) -> 
 
 const BACKUP_FORMAT: &str = "yuri2-backup";
 
-/// Fichier de sauvegarde : JSON lisible, état des composants inclus tel quel.
+/// Fichier de sauvegarde : JSON lisible, état des composants inclus tel quel. Les secrets
+/// y sont déchiffrés pour rester restaurables sans la clé : fichier à garder en lieu sûr.
 #[derive(serde::Serialize, serde::Deserialize)]
 struct Backup {
     format: String,
@@ -90,7 +122,7 @@ pub struct ImportSummary {
 
 #[tauri::command]
 pub fn export_data(state: tauri::State<DbState>, path: String) -> Result<(), String> {
-    let (workspaces, groups) = with_db(&state, |c| Ok((db::list_workspaces(c)?, db::list_groups(c)?)))?;
+    let (workspaces, groups) = with_db(&state, |c| Ok((db::list_workspaces(c)?, state.decrypted_groups(c)?)))?;
     let backup = Backup { format: BACKUP_FORMAT.into(), version: 1, workspaces, groups };
     let json = serde_json::to_string_pretty(&backup).map_err(|e| e.to_string())?;
     std::fs::write(&path, json).map_err(|e| format!("Écriture impossible : {}", e))
@@ -111,6 +143,7 @@ pub fn import_data(state: tauri::State<DbState>, path: String) -> Result<ImportS
     if let Some(g) = backup.groups.iter().find(|g| !known.contains(g.workspace_id.as_str())) {
         return Err(format!("Le composant « {} » pointe vers un espace absent du fichier.", g.name));
     }
-    with_db(&state, |c| db::replace_all(c, &backup.workspaces, &backup.groups))?;
+    let groups: Vec<Group> = backup.groups.iter().map(|g| state.seal_group(g)).collect();
+    with_db(&state, |c| db::replace_all(c, &backup.workspaces, &groups))?;
     Ok(ImportSummary { workspaces: backup.workspaces.len(), groups: backup.groups.len() })
 }

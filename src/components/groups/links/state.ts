@@ -10,7 +10,7 @@ export type LinkItem = {
   url: string;
   /** Identifiant associé au lien (optionnel). */
   username?: string;
-  /** Mot de passe associé au lien (optionnel, stocké en clair comme le groupe « Mots de passe »). */
+  /** Mot de passe associé au lien (optionnel, chiffré en base par le backend comme le groupe « Mots de passe »). */
   password?: string;
 };
 

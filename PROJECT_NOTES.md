@@ -267,6 +267,23 @@ viennent de HeroUI (`import { Button, Card, … } from "@heroui/react"`), avec u
   « Rappeler dans 5 min » non conservé au redémarrage), fenêtre dé-réduite, mise au premier plan
   et `alwaysOnTop` tant qu'une alerte est ouverte, toast Windows avec son. Permissions
   `core:window:allow-{show,unminimize,set-focus,set-always-on-top,request-user-attention}`.
+- 2026-10-13: **Composant `deploy` « Mise en production »** (21 types) : plusieurs MEP par
+  composant (application, version, date), choisies dans une liste triée par date. Chaque MEP
+  déroule des étapes ordonnées avec statut (À faire, En cours, Terminée, En échec, Ignorée ;
+  clic sur l'icône = statut suivant, pastille = choix libre), responsable, horodatage du
+  dernier changement de statut et **note libre par étape** (aperçu 2 lignes replié).
+  État global déduit des étapes + barre d'avancement. Une nouvelle MEP reprend les étapes
+  de la dernière MEP de la même application (sans statuts ni notes), sinon un déroulé
+  standard de 9 étapes. Réordonnancement par flèches haut/bas (pas de dnd).
+- 2026-11-20: **Mots de passe chiffrés en base** (`src-tauri/src/crypto.rs`). Dans
+  `groups.content`, toute chaîne sous une clé `password`, `accessToken` ou `refreshToken`
+  est chiffrée en AES-256-GCM (`enc:v1:<base64(nonce|chiffré)>`) à l'écriture et
+  déchiffrée à la lecture : le frontend ne voit que du clair. Clé de 32 octets dans
+  `yuri2.key`, à côté de `yuri2.db` (choisi plutôt que DPAPI/keyring pour garder le
+  mode portable copiable d'un PC à l'autre ; sans ce fichier, secrets illisibles).
+  Les secrets en clair sont chiffrés au démarrage (migration). Une valeur indéchiffrable
+  est laissée telle quelle, jamais écrasée. L'export de sauvegarde reste en clair
+  (restaurable sans la clé) ; l'import rechiffre.
 
 ## Open Questions
 - Quel visuel pour chaque type de composant (le cadre commun est fixé) ?
@@ -278,7 +295,6 @@ viennent de HeroUI (`import { Button, Card, … } from "@heroui/react"`), avec u
 - Filtre par tags (barre latérale de yuri).
 - Canal inter-groupes : workflow → calendrier (`onSendToCalendar`, déjà prévu côté
   workflow, `addTaskToCalendar` dans `calendarLink.ts`).
-- Chiffrer les mots de passe côté Rust ; jetons OAuth Google stockés dans l'état du groupe.
 - Images annotées stockées en data URL dans l'état : envisager un stockage fichier.
 - Fusionner les barres « Applications » de kanban, calendrier et workflow en un composant
   partagé ; unifier les `genId` locaux sur `@/lib/id` ; deux `InlineInput` coexistent

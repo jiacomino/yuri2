@@ -1,6 +1,7 @@
 mod capture;
 mod clipboard;
 mod commands;
+mod crypto;
 mod db;
 mod launcher;
 mod oauth;
@@ -12,6 +13,8 @@ use std::sync::Mutex;
 use tauri::{Manager, WebviewWindowBuilder};
 
 const DB_FILE: &str = "yuri2.db";
+/// Clé de chiffrement des mots de passe, rangée à côté de la base.
+const KEY_FILE: &str = "yuri2.key";
 /// Données du navigateur intégré (localStorage, cache) en mode portable.
 const WEBVIEW_DIR: &str = "yuri2-webview";
 
@@ -39,6 +42,10 @@ fn db_path(portable: Option<&Path>, app_data_dir: PathBuf) -> PathBuf {
     // Reprend une fois les données de l'ancien emplacement.
     if !path.exists() && legacy.exists() {
         let _ = std::fs::copy(&legacy, &path);
+        let legacy_key = app_data_dir.join(KEY_FILE);
+        if legacy_key.exists() {
+            let _ = std::fs::copy(&legacy_key, dir.join(KEY_FILE));
+        }
     }
     path
 }
@@ -52,8 +59,11 @@ pub fn run() {
         .manage(oauth::OAuthState::default())
         .setup(|app| {
             let portable = portable_dir();
-            let conn = db::open(&db_path(portable.as_deref(), app.path().app_data_dir()?))?;
-            app.manage(commands::DbState(Mutex::new(conn)));
+            let path = db_path(portable.as_deref(), app.path().app_data_dir()?);
+            let conn = db::open(&path)?;
+            let cipher = crypto::Cipher::load_or_create(&path.with_file_name(KEY_FILE))?;
+            commands::migrate_secrets(&conn, &cipher)?;
+            app.manage(commands::DbState { conn: Mutex::new(conn), cipher });
             clipboard::start_watcher(app.handle().clone());
 
             // Fenêtre créée ici (`create: false` dans la config) pour pouvoir placer les

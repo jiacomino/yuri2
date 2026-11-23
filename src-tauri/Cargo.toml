@@ -28,6 +28,7 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 xcap = "0.9.8"
 base64 = "0.23.1"
 arboard = "3.6.1"
+aes-gcm = "0.10"
 
 [target."cfg(windows)".dependencies]
 windows-sys = { version = "0.61", features = [

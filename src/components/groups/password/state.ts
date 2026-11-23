@@ -1,6 +1,6 @@
 /**
- * État du groupe « Mots de passe ». Même forme que yuri (stockage en clair) ;
- * le chiffrement côté Rust est prévu ultérieurement.
+ * État du groupe « Mots de passe ». Même forme que yuri ; les champs `password` sont
+ * chiffrés en base par le backend (src-tauri/src/crypto.rs) et arrivent ici en clair.
  */
 export type PasswordEntry = {
   id: string;
