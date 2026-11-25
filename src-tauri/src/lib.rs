@@ -3,6 +3,7 @@ mod clipboard;
 mod commands;
 mod crypto;
 mod db;
+mod ie;
 mod launcher;
 mod oauth;
 mod system;
@@ -57,10 +58,12 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
         .manage(oauth::OAuthState::default())
+        .manage(ie::RunningJobs::default())
         .setup(|app| {
             let portable = portable_dir();
             let path = db_path(portable.as_deref(), app.path().app_data_dir()?);
             let conn = db::open(&path)?;
+            ie::store::init(&conn)?;
             let cipher = crypto::Cipher::load_or_create(&path.with_file_name(KEY_FILE))?;
             commands::migrate_secrets(&conn, &cipher)?;
             app.manage(commands::DbState { conn: Mutex::new(conn), cipher });
@@ -103,6 +106,19 @@ pub fn run() {
             oauth::start_oauth_listener,
             oauth::await_oauth_callback,
             yuri1::read_yuri1_db,
+            ie::ie_settings_get,
+            ie::ie_settings_save,
+            ie::ie_check_binary,
+            ie::ie_test,
+            ie::ie_databases,
+            ie::ie_preview,
+            ie::ie_import_preview,
+            ie::ie_export,
+            ie::ie_import,
+            ie::ie_cancel,
+            ie::ie_live,
+            ie::ie_runs,
+            ie::ie_runs_clear,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

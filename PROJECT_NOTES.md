@@ -284,6 +284,37 @@ viennent de HeroUI (`import { Button, Card, … } from "@heroui/react"`), avec u
   Les secrets en clair sont chiffrés au démarrage (migration). Une valeur indéchiffrable
   est laissée telle quelle, jamais écrasée. L'export de sauvegarde reste en clair
   (restaurable sans la clé) ; l'import rechiffre.
+- 2026-11-23: **Composant `importexport` « Import / Export »** (22 types), repris de
+  YuriExport (`../YuriExport`) et étendu à la restauration. Backend `src-tauri/src/ie/`
+  (`engine.rs` : plan mariadb-dump, `.part` renommé au succès, gzip, mot de passe par
+  `--defaults-extra-file` temporaire ; import = fichier `.sql`/`.sql.gz` — gzip détecté
+  par l'en-tête — envoyé sur l'entrée du client `mariadb`, option `CREATE DATABASE IF NOT
+  EXISTS` et `--force`). Paramètres partagés (outils, applications, environnements,
+  serveurs) dans **Paramètres › onglet Import / Export**, stockés dans une nouvelle table
+  `settings` (clé `importExport`, JSON chiffré par `crypto` → les `password` des serveurs
+  le sont aussi), inclus dans la sauvegarde (champ `settings`, absent des anciennes =
+  paramètres conservés). Connecteurs dans l'état du composant (un onglet chacun), envoyés
+  au backend à chaque commande. Exécutions en thread, événements `ie://progress` /
+  `ie://finished`, historique en table `ie_runs` par composant (les « en cours » passent en
+  échec au redémarrage). Écoute d'événements unique côté front (`lib/importExport.ts`),
+  notifications même si le composant n'est pas affiché. Environnement « sensible » :
+  son nom doit être recopié avant export ou import. Non repris de YuriExport : onglets de
+  profils (inutilisés dans son interface), coffre à mot de passe maître (remplacé par
+  `crypto`), ouverture des fichiers comme composants (remplacée par « afficher dans
+  l'explorateur »).
+- 2026-11-23: **Applications partagées** (`lib/apps.ts`) : une seule liste, celle de
+  Paramètres › Import / Export (`importExport.applications`), pour calendrier, Kanban,
+  suivi de projet, mise en production et import / export. Les états ne gardent que
+  l'`appId` ; un id inconnu = « sans application ». Les éditeurs d'applications des
+  composants écrivent dans cette liste (créer / renommer / supprimer = pour tous). Le
+  champ `apps` des états calendrier / kanban / workflow ne sert plus qu'à la migration :
+  au montage, ses entrées sont reprises (rapprochement par id puis par nom, sans casse),
+  les `appId` renumérotés, puis il est vidé (`useAdoptLocalApps`) — couvre aussi les
+  anciennes sauvegardes et l'import yuri 1. MEP : `appId` ajouté à côté du nom (gardé en
+  repli), MEP existantes rattachées par nom (application créée au besoin). Modifs des
+  paramètres appliquées au cache aussitôt puis enregistrées dans l'ordre
+  (`updateIeSettings`), pour une saisie fluide et sans écrasement entre composants.
+  Fenêtre des paramètres agrandie (≈ 68rem × 88vh).
 
 ## Open Questions
 - Quel visuel pour chaque type de composant (le cadre commun est fixé) ?

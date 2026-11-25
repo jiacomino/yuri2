@@ -27,6 +27,7 @@ export function buildCalendarTask(
     title: action.title,
     priority: action.priority,
     notes: action.notes,
+    appId: app?.id,
     app: app ? { name: app.name, color: app.color } : undefined,
   };
   if (allDay) {

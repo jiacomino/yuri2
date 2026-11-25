@@ -1,16 +1,24 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { Button, Input, Label, ListBox, Modal, Select, TextField } from "@heroui/react";
+import { Button, Input, Label, ListBox, Modal, Select, Tabs, TextField } from "@heroui/react";
 import type { LucideIcon } from "lucide-react";
-import { CalendarClock, DatabaseBackup, Download, Folders, Globe, Import, Upload } from "lucide-react";
+import { ArrowDownUp, CalendarClock, DatabaseBackup, Download, Folders, Globe, Import, SlidersHorizontal, Upload } from "lucide-react";
 import { CredentialsForm } from "@/components/groups/gcalendar/CredentialsForm";
+import { ImportExportSettings } from "@/components/settings/ImportExportSettings";
 import { exportBackup, importBackup } from "@/lib/backup";
 import { loadBrowserPref, saveBrowserPref, type BrowserPref } from "@/lib/browserPref";
 import { notify } from "@/lib/notify";
 import { loadStartupPref, saveStartupPref, type StartupPref } from "@/lib/startupPref";
 import { runYuri1Import } from "@/lib/yuri1/run";
 import type { Workspace } from "@/types/workspace";
+
+type SettingsTab = "general" | "importExport";
+
+const SETTINGS_TABS: { id: SettingsTab; label: string; icon: LucideIcon }[] = [
+  { id: "general", label: "Général", icon: SlidersHorizontal },
+  { id: "importExport", label: "Import / Export", icon: ArrowDownUp },
+];
 
 type SettingsDialogProps = {
   isOpen: boolean;
@@ -20,17 +28,31 @@ type SettingsDialogProps = {
 
 /** Paramètres généraux de l'application, enregistrés à chaque modification. */
 export function SettingsDialog({ isOpen, workspaces, onClose }: SettingsDialogProps) {
+  const [tab, setTab] = useState<SettingsTab>("general");
   return (
     <Modal.Backdrop isOpen={isOpen} onOpenChange={(next) => !next && onClose()}>
-      <Modal.Container size="md" scroll="inside">
-        <Modal.Dialog aria-label="Paramètres">
+      <Modal.Container size="lg" scroll="inside">
+        <Modal.Dialog aria-label="Paramètres" className="h-[min(88vh,56rem)] w-[min(68rem,95vw)] max-w-none">
           <Modal.CloseTrigger />
-          <Modal.Header>
+          <Modal.Header className="flex flex-col items-stretch gap-2">
             <Modal.Heading>Paramètres</Modal.Heading>
+            <Tabs variant="secondary" selectedKey={tab} onSelectionChange={(key) => setTab(key as SettingsTab)}>
+              <Tabs.ListContainer>
+                <Tabs.List aria-label="Rubriques des paramètres" className="gap-5">
+                  {SETTINGS_TABS.map(({ id, label, icon: Icon }) => (
+                    <Tabs.Tab key={id} id={id} className="h-auto w-auto gap-1.5 px-0 py-2 text-[0.963rem] font-semibold text-muted data-[selected=true]:text-accent">
+                      <Icon className="size-3.5" />
+                      {label}
+                      <Tabs.Indicator />
+                    </Tabs.Tab>
+                  ))}
+                </Tabs.List>
+              </Tabs.ListContainer>
+            </Tabs>
           </Modal.Header>
           <Modal.Body className="flex flex-col gap-6">
             {/* Monté à l'ouverture seulement : relit les préférences et redétecte les navigateurs. */}
-            {isOpen && (
+            {isOpen && tab === "general" && (
               <>
                 <BackupSection />
                 <StartupSection workspaces={workspaces} />
@@ -40,6 +62,7 @@ export function SettingsDialog({ isOpen, workspaces, onClose }: SettingsDialogPr
                 </Section>
               </>
             )}
+            {isOpen && tab === "importExport" && <ImportExportSettings />}
           </Modal.Body>
         </Modal.Dialog>
       </Modal.Container>

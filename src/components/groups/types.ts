@@ -22,7 +22,8 @@ export type GroupKind =
   | "goals"
   | "clipboard"
   | "launcher"
-  | "deploy";
+  | "deploy"
+  | "importexport";
 
 /**
  * Contrat commun à tous les corps de groupe : un état typé, contrôlé par le parent.

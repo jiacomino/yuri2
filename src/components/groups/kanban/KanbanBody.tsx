@@ -17,8 +17,8 @@ import { CardDetailsModal } from "./CardDetailsModal";
 import { confirmDelete } from "@/lib/confirm";
 import { collisionDetection, moveCard, moveCardToColumn } from "./dnd";
 import { KanbanColumnView } from "./KanbanColumnView";
-import { nextAppColor } from "./meta";
-import { newId, type AppTag, type CardPatch, type KanbanCard, type KanbanState } from "./state";
+import { createSharedApp, removeSharedApp, updateSharedApp, useAdoptLocalApps, useSharedApps } from "@/lib/apps";
+import { newId, type CardPatch, type KanbanCard, type KanbanState } from "./state";
 
 /** Applique un patch : chaîne vide / « normal » retirent le champ correspondant. */
 function applyPatch(card: KanbanCard, patch: CardPatch): KanbanCard {
@@ -49,7 +49,13 @@ export function KanbanBody({ value, onChange }: BodyProps<KanbanState>) {
   // Une distance d'activation laisse passer les clics simples (ouvrir les détails).
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
-  const { columns, apps } = value;
+  // Applications : liste partagée des paramètres ; l'état ne garde que les appId.
+  const apps = useSharedApps();
+  useAdoptLocalApps(value, onChange, (s, map) => ({
+    ...s,
+    columns: s.columns.map((c) => ({ ...c, cards: c.cards.map((k) => (k.appId && map.has(k.appId) ? { ...k, appId: map.get(k.appId) } : k)) })),
+  }));
+  const { columns } = value;
   const setColumns = (next: KanbanState["columns"]) => onChange({ ...value, columns: next });
 
   // ─── Cartes ───────────────────────────────────────────────────────────────
@@ -95,39 +101,33 @@ export function KanbanBody({ value, onChange }: BodyProps<KanbanState>) {
     setColumns(columns.filter((c) => c.id !== columnId));
   }
 
-  // ─── Applications ─────────────────────────────────────────────────────────
+  // ─── Applications (partagées) ─────────────────────────────────────────────
   /** Renvoie l'id de l'application créée pour que l'appelant puisse la sélectionner. */
-  function addApp(name: string, color?: string): string | undefined {
-    const clean = name.trim();
-    if (!clean) return undefined;
-    const id = newId();
-    onChange({ ...value, apps: [...apps, { id, name: clean, color: color || nextAppColor(apps.length) }] });
-    return id;
-  }
+  const addApp = (name: string, color?: string) => createSharedApp(name, color);
+  const updateApp = updateSharedApp;
 
-  function updateApp(appId: string, patch: Partial<Omit<AppTag, "id">>) {
-    onChange({ ...value, apps: apps.map((a) => (a.id === appId ? { ...a, ...patch } : a)) });
-  }
-
-  /** Supprime l'application et désaffecte les cartes qui la référençaient. */
+  /** Supprime l'application de la liste partagée et désaffecte les cartes de ce tableau. */
   async function removeApp(appId: string) {
     const app = apps.find((a) => a.id === appId);
     if (!app) return;
     const used = columns.reduce((n, c) => n + c.cards.filter((k) => k.appId === appId).length, 0);
-    if (used > 0) {
-      const ok = await confirmDelete(
-        `Supprimer l'application « ${app.name} » ? ${used} carte${used > 1 ? "s seront désaffectées" : " sera désaffectée"}.`,
-      );
-      if (!ok) return;
-    }
+    const ok = await confirmDelete(
+      `Supprimer l'application « ${app.name} » ? Elle disparaît de tous les composants (liste partagée des paramètres).${
+        used > 0 ? ` ${used} carte${used > 1 ? "s seront désaffectées" : " sera désaffectée"} ici.` : ""
+      }`,
+    );
+    if (!ok) return;
     if (filterAppId === appId) setFilterAppId(null);
-    onChange({
-      apps: apps.filter((a) => a.id !== appId),
-      columns: columns.map((c) => ({
-        ...c,
-        cards: c.cards.map((k) => (k.appId === appId ? applyPatch(k, { appId: "" }) : k)),
-      })),
-    });
+    removeSharedApp(appId);
+    if (used > 0) {
+      onChange({
+        ...value,
+        columns: columns.map((c) => ({
+          ...c,
+          cards: c.cards.map((k) => (k.appId === appId ? applyPatch(k, { appId: "" }) : k)),
+        })),
+      });
+    }
   }
 
   // ─── Glisser-déposer ──────────────────────────────────────────────────────

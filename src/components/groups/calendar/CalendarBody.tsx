@@ -4,11 +4,12 @@ import type { BodyProps } from "../types";
 import { AppsBar } from "./AppsBar";
 import { CalendarGrid } from "./CalendarGrid";
 import { CalendarToolbar } from "./CalendarToolbar";
+import { createSharedApp, removeSharedApp, updateSharedApp, useAdoptLocalApps, useSharedApps } from "@/lib/apps";
 import { confirmDelete } from "@/lib/confirm";
 import { nextSlot } from "./dates";
 import { EventEditorModal } from "./EventEditorModal";
 import { genId, nextColor } from "./meta";
-import type { AppTag, CalendarState, CalendarTask, CalendarView } from "./state";
+import type { CalendarState, CalendarTask, CalendarView } from "./state";
 import "./calendar.css";
 
 /** Calendrier de tâches sur grille horaire, avec applications, priorités et filtre. */
@@ -26,6 +27,13 @@ export function CalendarBody({ value, onChange }: BodyProps<CalendarState>) {
     onChange(valueRef.current);
   };
 
+  // Applications : liste partagée des paramètres ; l'état ne garde que les appId.
+  const apps = useSharedApps();
+  useAdoptLocalApps(value, onChange, (s, map) => ({
+    ...s,
+    events: s.events.map((e) => (e.appId && map.has(e.appId) ? { ...e, appId: map.get(e.appId) } : e)),
+  }));
+
   // La vue peut aussi changer depuis l'extérieur (état restauré).
   useEffect(() => {
     const api = calRef.current?.getApi();
@@ -33,7 +41,7 @@ export function CalendarBody({ value, onChange }: BodyProps<CalendarState>) {
   }, [value.view]);
 
   // Un filtre sur une application supprimée n'a plus de sens.
-  const activeFilter = filterAppId && value.apps.some((a) => a.id === filterAppId) ? filterAppId : null;
+  const activeFilter = filterAppId && apps.some((a) => a.id === filterAppId) ? filterAppId : null;
 
   const visibleTasks = useMemo(
     () => (activeFilter ? value.events.filter((e) => e.appId === activeFilter) : value.events),
@@ -76,36 +84,24 @@ export function CalendarBody({ value, onChange }: BodyProps<CalendarState>) {
     setSelectedId(null);
   }
 
-  // ─── Applications ─────────────────────────────────────────────────────────
-  function addApp(name: string, color?: string): string | undefined {
-    const clean = name.trim();
-    if (!clean) return undefined;
-    const id = genId();
-    update((s) => ({ ...s, apps: [...s.apps, { id, name: clean, color: color || nextColor(s.apps.length) }] }));
-    return id;
-  }
+  // ─── Applications (partagées) ─────────────────────────────────────────────
+  const addApp = (name: string, color?: string) => createSharedApp(name, color);
+  const updateApp = updateSharedApp;
 
-  function updateApp(appId: string, patch: Partial<Omit<AppTag, "id">>) {
-    update((s) => ({ ...s, apps: s.apps.map((a) => (a.id === appId ? { ...a, ...patch } : a)) }));
-  }
-
-  /** Supprime l'application et désaffecte les tâches qui la référençaient. */
+  /** Supprime l'application de la liste partagée et désaffecte les tâches de ce calendrier. */
   async function removeApp(appId: string) {
-    const app = valueRef.current.apps.find((a) => a.id === appId);
+    const app = apps.find((a) => a.id === appId);
     if (!app) return;
     const used = valueRef.current.events.filter((e) => e.appId === appId).length;
-    if (used > 0) {
-      const plural = used > 1;
-      const ok = await confirmDelete(
-        `Supprimer l'application « ${app.name} » ? ${used} tâche${plural ? "s seront" : " sera"} désaffectée${plural ? "s" : ""}.`,
-      );
-      if (!ok) return;
-    }
-    update((s) => ({
-      ...s,
-      apps: s.apps.filter((a) => a.id !== appId),
-      events: s.events.map((e) => (e.appId === appId ? { ...e, appId: undefined } : e)),
-    }));
+    const plural = used > 1;
+    const ok = await confirmDelete(
+      `Supprimer l'application « ${app.name} » ? Elle disparaît de tous les composants (liste partagée des paramètres).${
+        used > 0 ? ` ${used} tâche${plural ? "s seront" : " sera"} désaffectée${plural ? "s" : ""} ici.` : ""
+      }`,
+    );
+    if (!ok) return;
+    removeSharedApp(appId);
+    if (used > 0) update((s) => ({ ...s, events: s.events.map((e) => (e.appId === appId ? { ...e, appId: undefined } : e)) }));
   }
 
   // ─── Navigation ───────────────────────────────────────────────────────────
@@ -119,7 +115,7 @@ export function CalendarBody({ value, onChange }: BodyProps<CalendarState>) {
   return (
     <div className="flex h-full flex-col">
       <AppsBar
-        apps={value.apps}
+        apps={apps}
         activeAppId={activeFilter}
         onSelectApp={setFilterAppId}
         onAdd={addApp}
@@ -144,7 +140,7 @@ export function CalendarBody({ value, onChange }: BodyProps<CalendarState>) {
           calRef={calRef}
           initialView={value.view}
           tasks={visibleTasks}
-          apps={value.apps}
+          apps={apps}
           selectedId={selectedId}
           onSelectRange={(start, end, allDay) => setSelectedId(addTask(start, end, allDay))}
           onTaskClick={setSelectedId}
@@ -154,7 +150,7 @@ export function CalendarBody({ value, onChange }: BodyProps<CalendarState>) {
       </div>
       <EventEditorModal
         task={selected}
-        apps={value.apps}
+        apps={apps}
         onPatch={patchTask}
         onCreateApp={addApp}
         onDelete={removeTask}

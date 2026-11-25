@@ -6,13 +6,19 @@ import path from "path";
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
+// Windows : lettre de lecteur en majuscule. Lancé depuis `c:\...`, le bundler voit
+// React sous deux chemins (`c:` et `C:`), l'embarque deux fois et l'appli reste
+// blanche en production (« Cannot read properties of null (reading 'useState') »).
+const root = import.meta.dirname.replace(/^[a-z]:/, (d) => d.toUpperCase());
+
 // https://vite.dev/config/
 export default defineConfig(async () => ({
+  root,
   plugins: [react(), tailwindcss()],
 
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "./src"),
+      "@": path.resolve(root, "./src"),
     },
   },
 

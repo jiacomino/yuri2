@@ -20,6 +20,7 @@ import { goalsGroup } from "./goals";
 import { clipboardGroup } from "./clipboard";
 import { launcherGroup } from "./launcher";
 import { deployGroup } from "./deploy";
+import { importExportGroup } from "./importexport";
 
 /** Tous les types de groupe, dans l'ordre du menu « Ajouter ». */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,6 +46,7 @@ export const groupDefinitions: GroupDefinition<any>[] = [
   clipboardGroup,
   launcherGroup,
   deployGroup,
+  importExportGroup,
 ];
 
 export function findDefinition(kind: GroupKind): GroupDefinition<unknown> | undefined {
@@ -74,4 +76,5 @@ export const groupDescriptions: Record<GroupKind, string> = {
   clipboard: "Historique des textes et images copiés, à recopier en un clic.",
   launcher: "Applications Windows à lancer d'un clic, choisies parmi celles installées.",
   deploy: "Déroulé d'une mise en production par étapes, avec une note sur chaque étape.",
+  importexport: "Connecteurs MariaDB : export par mariadb-dump et restauration d'un dump, avec historique.",
 };

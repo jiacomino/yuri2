@@ -17,7 +17,10 @@ export type DeployStep = {
 /** Une mise en production d'une application. */
 export type Deployment = {
   id: string;
+  /** Nom de l'application au moment de la saisie (repli si l'application partagée a disparu). */
   app: string;
+  /** Id de l'application partagée (`@/lib/apps`, saisie dans les paramètres). */
+  appId?: string;
   version: string;
   /** Date prévue AAAA-MM-JJ, vide si non fixée. */
   date: string;
@@ -51,18 +54,23 @@ export function newStep(title: string): DeployStep {
  * Nouvelle MEP : reprend les étapes (titres et responsables, sans statut ni note) de la
  * dernière MEP de la même application, ou le modèle standard à défaut.
  */
-export function newDeployment(app: string, version: string, date: string, previous?: Deployment): Deployment {
+export function newDeployment(app: string, version: string, date: string, previous?: Deployment, appId?: string): Deployment {
   const steps = previous
     ? previous.steps.map((s) => ({ ...newStep(s.title), owner: s.owner }))
     : TEMPLATE_STEPS.map(newStep);
-  return { id: genId(), app: app.trim(), version: version.trim(), date, steps };
+  return { id: genId(), app: app.trim(), ...(appId ? { appId } : {}), version: version.trim(), date, steps };
 }
 
-/** Dernière MEP (par date) de l'application, comparée sans tenir compte de la casse. */
-export function lastDeploymentOf(deployments: Deployment[], app: string): Deployment | undefined {
+/**
+ * Dernière MEP (par date) de l'application : par id d'application partagée quand il est
+ * connu, sinon par nom sans tenir compte de la casse.
+ */
+export function lastDeploymentOf(deployments: Deployment[], app: string, appId?: string): Deployment | undefined {
   const key = app.trim().toLowerCase();
-  if (!key) return undefined;
-  return sortByDate(deployments.filter((d) => d.app.trim().toLowerCase() === key))[0];
+  if (!key && !appId) return undefined;
+  return sortByDate(
+    deployments.filter((d) => (appId && d.appId ? d.appId === appId : !!key && d.app.trim().toLowerCase() === key)),
+  )[0];
 }
 
 /** Plus récentes d'abord ; sans date en tête (MEP en préparation). */

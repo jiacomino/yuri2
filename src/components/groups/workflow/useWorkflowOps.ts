@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 import type { ConfirmRequest } from "./ConfirmModal";
+import { createSharedApp, removeSharedApp, updateSharedApp } from "@/lib/apps";
 import { buildCalendarTask, type SendToCalendar } from "./calendar";
 import * as S from "./state";
 import type { AppTag, WorkflowAction, WorkflowState } from "./state";
@@ -109,31 +110,23 @@ export function useWorkflowOps(
       setAlarm: (id, alarmAt) => update((s) => S.setActionAlarm(s, id, alarmAt)),
       markAlarmsFired: (ids) => update((s) => S.markAlarmsFired(s, ids)),
       setApp: (id, appId) => update((s) => S.patchAction(s, id, { appId })),
-      createApp: (name, color) => {
-        let created: string | undefined;
-        update((s) => {
-          const res = S.addApp(s, name, color);
-          created = res.id;
-          return res.state;
-        });
-        return created;
-      },
-      updateApp: (appId, patch) => update((s) => S.updateApp(s, appId, patch)),
+      // Applications : liste partagée des paramètres (`@/lib/apps`).
+      createApp: (name, color) => createSharedApp(name, color),
+      updateApp: (appId, patch) => updateSharedApp(appId, patch),
       removeApp: async (appId) => {
         const app = get().apps.find((a) => a.id === appId);
         if (!app) return false;
         const used = get().actions.filter((a) => a.appId === appId).length;
-        if (used > 0) {
-          const ok = await confirm({
-            title: "Supprimer l'application",
-            message: `Supprimer l'application « ${app.name} » ? ${used} action${
-              used > 1 ? "s seront désaffectées" : " sera désaffectée"
-            }.`,
-            confirmLabel: "Supprimer",
-            danger: true,
-          });
-          if (!ok) return false;
-        }
+        const ok = await confirm({
+          title: "Supprimer l'application",
+          message: `Supprimer l'application « ${app.name} » ? Elle disparaît de tous les composants (liste partagée des paramètres).${
+            used > 0 ? ` ${used} action${used > 1 ? "s seront désaffectées" : " sera désaffectée"} ici.` : ""
+          }`,
+          confirmLabel: "Supprimer",
+          danger: true,
+        });
+        if (!ok) return false;
+        removeSharedApp(appId);
         update((s) => S.removeApp(s, appId));
         return true;
       },

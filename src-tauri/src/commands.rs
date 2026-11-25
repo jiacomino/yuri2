@@ -2,6 +2,7 @@
 
 use crate::crypto::Cipher;
 use crate::db::{self, Group, LayoutPatch, Workspace};
+use crate::ie::store as ie_store;
 use rusqlite::Connection;
 use std::sync::Mutex;
 
@@ -112,6 +113,15 @@ struct Backup {
     version: u32,
     workspaces: Vec<Workspace>,
     groups: Vec<Group>,
+    /// Paramètres (import / export…). Absent des anciennes sauvegardes : conservés tels quels.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    settings: Option<Vec<SettingEntry>>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct SettingEntry {
+    key: String,
+    value: String,
 }
 
 #[derive(serde::Serialize)]
@@ -122,8 +132,14 @@ pub struct ImportSummary {
 
 #[tauri::command]
 pub fn export_data(state: tauri::State<DbState>, path: String) -> Result<(), String> {
-    let (workspaces, groups) = with_db(&state, |c| Ok((db::list_workspaces(c)?, state.decrypted_groups(c)?)))?;
-    let backup = Backup { format: BACKUP_FORMAT.into(), version: 1, workspaces, groups };
+    let (workspaces, groups, settings) = with_db(&state, |c| {
+        let settings = ie_store::list_settings(c)?
+            .into_iter()
+            .map(|(key, value)| SettingEntry { key, value: state.cipher.open(&value) })
+            .collect();
+        Ok((db::list_workspaces(c)?, state.decrypted_groups(c)?, settings))
+    })?;
+    let backup = Backup { format: BACKUP_FORMAT.into(), version: 1, workspaces, groups, settings: Some(settings) };
     let json = serde_json::to_string_pretty(&backup).map_err(|e| e.to_string())?;
     std::fs::write(&path, json).map_err(|e| format!("Écriture impossible : {}", e))
 }
@@ -144,6 +160,16 @@ pub fn import_data(state: tauri::State<DbState>, path: String) -> Result<ImportS
         return Err(format!("Le composant « {} » pointe vers un espace absent du fichier.", g.name));
     }
     let groups: Vec<Group> = backup.groups.iter().map(|g| state.seal_group(g)).collect();
-    with_db(&state, |c| db::replace_all(c, &backup.workspaces, &groups))?;
+    let settings: Option<Vec<(String, String)>> = backup
+        .settings
+        .as_ref()
+        .map(|list| list.iter().map(|s| (s.key.clone(), state.cipher.seal(&s.value))).collect());
+    with_db(&state, |c| {
+        db::replace_all(c, &backup.workspaces, &groups)?;
+        match &settings {
+            Some(entries) => ie_store::replace_settings(c, entries),
+            None => Ok(()),
+        }
+    })?;
     Ok(ImportSummary { workspaces: backup.workspaces.len(), groups: backup.groups.len() })
 }

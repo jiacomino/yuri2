@@ -16,7 +16,9 @@ export type CalendarTaskPayload = {
   allDay: boolean;
   priority: CalendarTaskPriority;
   notes?: string;
-  /** Retrouvée par nom (sans casse) dans le calendrier cible, créée sinon. */
+  /** Id d'une application partagée (`@/lib/apps`) ; prioritaire sur `app`. */
+  appId?: string;
+  /** Ancien mode : retrouvée par nom (sans casse) dans le calendrier cible, créée sinon. */
   app?: { name: string; color: string };
 };
 
@@ -29,8 +31,8 @@ function genId(): string {
 export function addTaskToCalendar(state: CalendarState, task: CalendarTaskPayload): CalendarState {
   const apps = [...state.apps];
 
-  let appId: string | undefined;
-  if (task.app) {
+  let appId: string | undefined = task.appId;
+  if (!appId && task.app) {
     const wanted = task.app.name.trim().toLowerCase();
     const existing = apps.find((a) => a.name.trim().toLowerCase() === wanted);
     if (existing) {

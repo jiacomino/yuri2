@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { useAdoptLocalApps, useSharedApps } from "@/lib/apps";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import type { BodyProps } from "../types";
 import { AppsBar } from "./AppsBar";
@@ -31,8 +32,24 @@ export function WorkflowBody(props: WorkflowBodyProps) {
   return <WorkflowBoard key={props.groupId} {...props} />;
 }
 
-function WorkflowBoard({ value, onChange, calendars = NO_CALENDARS, onSendToCalendar }: WorkflowBodyProps) {
+function WorkflowBoard({ value: stored, onChange: onStoredChange, calendars = NO_CALENDARS, onSendToCalendar }: WorkflowBodyProps) {
   const { confirm, dialog } = useConfirm();
+
+  // Applications : liste partagée des paramètres, injectée dans l'état vu par les
+  // enfants ; l'état enregistré garde sa propre liste (vide une fois reprise).
+  const sharedApps = useSharedApps();
+  useAdoptLocalApps(stored, onStoredChange, (s, map) => ({
+    ...s,
+    actions: s.actions.map((a) => (a.appId && map.has(a.appId) ? { ...a, appId: map.get(a.appId) } : a)),
+  }));
+  const value = useMemo(() => ({ ...stored, apps: sharedApps }), [stored, sharedApps]);
+  const storedRef = useRef(stored);
+  storedRef.current = stored;
+  const onChange = useCallback(
+    (next: WorkflowState) => onStoredChange({ ...next, apps: storedRef.current.apps }),
+    [onStoredChange],
+  );
+
   const ops = useWorkflowOps(value, onChange, confirm, onSendToCalendar);
   useWorkflowAlarms(value, ops.markAlarmsFired);
   const dnd = useWorkflowDnd(ops.drop);

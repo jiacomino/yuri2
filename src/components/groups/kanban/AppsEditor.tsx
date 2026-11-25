@@ -27,7 +27,7 @@ export function AppsEditor({ apps, onAddApp, onUpdateApp, onRemoveApp }: AppsEdi
 
   return (
     <div className="flex w-72 flex-col gap-2 p-3">
-      <span className="text-xs font-medium text-muted">Applications du tableau</span>
+      <span className="text-xs font-medium text-muted">Applications (partagées avec les paramètres)</span>
 
       <div className="flex max-h-56 flex-col gap-1.5 overflow-y-auto">
         {apps.length === 0 && (

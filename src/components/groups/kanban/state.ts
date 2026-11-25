@@ -14,7 +14,7 @@ export type KanbanCard = {
   description?: string;
   /** Absente = « normal ». */
   priority?: CardPriority;
-  /** Id d'une entrée de `KanbanState.apps`, absent si non affectée. */
+  /** Id d'une application partagée (`@/lib/apps`), absent si non affectée. */
   appId?: string;
 };
 
@@ -26,6 +26,10 @@ export type KanbanColumn = {
 
 export type KanbanState = {
   columns: KanbanColumn[];
+  /**
+   * Ancienne liste locale (versions antérieures, import yuri 1) : reprise dans la liste
+   * partagée des paramètres au montage, puis vidée.
+   */
   apps: AppTag[];
 };
 

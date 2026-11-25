@@ -27,7 +27,7 @@ export function AppsEditor({ onRemove }: AppsEditorProps) {
 
   return (
     <div className="flex w-72 flex-col gap-2 p-3">
-      <span className="text-[0.8148rem] font-bold uppercase tracking-[.06em] text-muted">Applications du workflow</span>
+      <span className="text-[0.8148rem] font-bold uppercase tracking-[.06em] text-muted">Applications partagées</span>
       <div className="flex max-h-56 flex-col gap-1.5 overflow-y-auto">
         {apps.length === 0 && (
           <p className="text-xs text-muted">Aucune application. Ajoutez-en une ci-dessous pour y affecter des actions.</p>

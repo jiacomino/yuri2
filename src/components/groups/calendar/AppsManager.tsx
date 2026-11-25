@@ -28,7 +28,7 @@ export function AppsManager({ apps, onAdd, onUpdate, onRemove }: AppsManagerProp
 
   return (
     <div className="flex w-72 flex-col gap-2">
-      <p className="text-xs font-medium text-muted">Applications du calendrier</p>
+      <p className="text-xs font-medium text-muted">Applications (partagées avec les paramètres)</p>
 
       <div className="flex max-h-56 flex-col gap-1 overflow-y-auto">
         {apps.length === 0 && (

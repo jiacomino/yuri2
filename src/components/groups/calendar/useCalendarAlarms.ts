@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { fireAlarmNotification } from "@/lib/alarm";
 import { showAlert } from "@/lib/alertOverlay";
+import { peekIeSettings } from "@/lib/importExport";
 import type { GroupRecord } from "@/types/workspace";
 import { alarmInstant, formatAlarmWhen, isAlarmDue } from "./alarms";
 import type { CalendarState, CalendarTask } from "./state";
@@ -35,7 +36,8 @@ export function useCalendarAlarms(
       if (due.length === 0) continue;
 
       for (const task of due) {
-        const app = state!.apps.find((a) => a.id === task.appId);
+        const app =
+          peekIeSettings()?.applications.find((a) => a.id === task.appId) ?? state!.apps?.find((a) => a.id === task.appId);
         const title = task.title.trim() || "Tâche sans titre";
         const when = taskWhen(task);
         showAlert({
@@ -43,7 +45,7 @@ export function useCalendarAlarms(
           title,
           subtitle: app ? `${when} · ${app.name}` : when,
           body: task.notes.trim() || undefined,
-          color: app?.color ?? task.color,
+          color: app?.color || task.color,
         });
         // Un seul son pour une salve de rappels.
         void fireAlarmNotification(`Rappel · ${title}`, when, { sound: first });
